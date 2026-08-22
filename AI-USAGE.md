@@ -1,9 +1,9 @@
-AI Usage
+# AI Usage
 
-Large Language Models (LLMs), including ChatGPT,Claude and Gemini is used during development. They were used for:
+LLM model such as ChatGPT and Claude was used during the development for
 
-    * Understanding the problem statement.
-    * Brainstorming and discussing implementation approaches.
-    * Coding assistance and debugging.
-    * Generating and reviewing test cases.
-    * Documentation assistance.
+- Debugging some piece of code in the src/
+- Also, I've used AI in order to learn few stuff since RAG was a new concept for me and I used AI to asked doubts on implementing AI/RAG in this project. 
+- Used a free LLM API (Groq) instead of using paid LLMs like Anthropic, since budget was a constraint for this hackathon.
+
+*The policy manual remains the only source of truth; the AI's role was implementation help, not policy judgment.*

@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 from groq import Groq
 
 from retriever import PolicyRetriever
+from parser import parse_policy
+from citations import extract_citations, validate_citations
 
 load_dotenv()
 
@@ -29,7 +31,7 @@ def generate_answer(question, clauses):
 
     response = client.chat.completions.create(
         model="openai/gpt-oss-120b",
-        max_tokens=2048,
+        max_tokens=500,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": question}
@@ -40,6 +42,7 @@ def generate_answer(question, clauses):
 
 
 if __name__ == "__main__":
+    all_clauses = parse_policy("data/policy-manual.md")
     retriever = PolicyRetriever("data/policy-manual.md")
 
     question = input("Question: ")
@@ -54,3 +57,18 @@ if __name__ == "__main__":
     print("\nRetrieved clauses used as evidence:")
     for c in top_clauses:
         print(f"  §{c['clause']} (score: {c['score']:.3f})")
+
+    cited = extract_citations(answer)
+    report = validate_citations(cited, top_clauses, all_clauses)
+
+    print("\nCitation validation:")
+    if not report:
+        print("  No citations found in the answer.")
+    for r in report:
+        if r["was_retrieved"]:
+            status = "OK - matches retrieved evidence"
+        elif r["exists_in_manual"]:
+            status = "WARNING - real clause, but was NOT part of retrieved evidence"
+        else:
+            status = "ERROR - this clause does not exist in the manual (hallucinated)"
+        print(f"  §{r['clause']}: {status}")

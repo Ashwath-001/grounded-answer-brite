@@ -1,25 +1,13 @@
 # Engineering Decisions
 
-## 1. Grounded Retrieval
+- Each numbered clause (e.g. §4.3.2) is treated as one retrieval unit. This makes citations simple and precise.
 
-Treating each numbered policy clause as a retrieval unit so that answers can be traced to exact source.
+- We use semantic search with `all-MiniLM-L6-v2` instead of only keyword search, so similar questions can find relevant clauses even when the wording is different.
 
-## 2. Semantic Search
+- The LLM answers only using the retrieved policy clauses. It should not use outside knowledge or guess missing information.
 
-I use semantic retrieval to identify clauses relevant to the user's question. Retrieval will be treated as evidence gathering, not as a proof as the answer exists.
+- Citations are checked to make sure the cited clause exists and was included in the retrieved evidence.
 
-## 3. Answer vs. Refusal
+- Retrieval, generation, and citation checking are separate modules. This keeps the code simple and makes future changes easier.
 
-The system answers only when the retrieved evidence sufficiently supports the question. If the policy does not cover the question or is ambiguous, the system refuses instead of guessing.
-
-## 4. Contradictions
-
-When relevant clauses conflict, the system should surface the conflict and cite both clauses rather than silently selecting one interpretation.
-
-## 5. Citations
-
-Every substantive answer includes the specific policy clause used as evidence. Citations are derived from stored clause metadata to keep them verifiable.
-
-## 6. Modularity
-
-Document ingestion, retrieval, answer generation, grounding, and evaluation are kept separate. I think this will be more helpful for managing and also we can easily change the system requiurements if it is more modular.
+- We do not hard-code the known trap questions. The system should handle them using general grounding and refusal logic.
