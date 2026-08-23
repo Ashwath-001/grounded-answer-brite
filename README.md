@@ -100,12 +100,9 @@ python tests/evaluation.py
 
 This runs 10 self-created test questions (covering a normal answer, the live contradiction, the resolved-post-amendment case, the full-time-education refusal case, both amended and pre-amendment figures, and a fully out-of-scope refusal), prints pass/fail to the console, and writes a full report to `tests/evaluation_results.md`.
 
-## Known limitations
+## Known Limitations
 
-- Refusal is based on a retrieval-score threshold tuned against a small number of observed examples, not exhaustively validated - a question phrased very differently from the test set could occasionally be answered when it should refuse, or vice versa.
-
-- Amendment insertions (e.g. §10.5.3A) are injected into context whenever they're date-active, regardless of whether the question is actually related — they don't go through retrieval scoring.
-
-- The system does not attempt to detect *new* contradictions automatically; the one known conflict (§4.3.2/§9.1.4) is explicitly configured.
-
-- *If i had more time,  I would have focused on the contradictions. As of now, i have hardcoded the known contradictions which i found by reading the policy manual.*
+- Refusal currently uses a retrieval-score threshold tuned on a small evaluation set.
+- Amendment clauses are added to the context when their date conditions are active.
+- The current contradiction detection handles the known §4.3.2 / §9.1.4 conflict explicitly; it does not automatically discover new contradictions.
+- The evaluation set is self-created and relatively small.
