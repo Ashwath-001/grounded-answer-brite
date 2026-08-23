@@ -15,7 +15,7 @@ A CLI tool that answers plain-language questions about the Calder County Househo
 
 ## Workflow
 
-mermaid
+```mermaid
 flowchart TD
     A[User question + 2 dates] --> B[Semantic retrieval<br/>top-3 clauses]
     B --> C{Retrieval score<br/>above threshold?}
@@ -26,7 +26,7 @@ flowchart TD
     G --> H[LLM generates answer<br/>from clauses only]
     H --> I[Extract + validate<br/>citations]
     I --> J[Final answer<br/>+ citations shown]
-
+```
 
 ## Setup
 
