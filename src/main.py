@@ -1,75 +1,8 @@
-import os
 from datetime import datetime
-from dotenv import load_dotenv
-from groq import Groq
 
 from retriever import PolicyRetriever
 from parser import parse_policy
-from citations import extract_citations, validate_citations
-from grounding import is_answerable, REFUSAL_MESSAGE
-from amendments import apply_amendments, get_applicable_insertions, all_known_clause_ids
-from contradictions import find_contradiction_group, resolve_contradiction_group
-
-load_dotenv()
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-
-
-def build_context(clauses):
-    return "\n\n---\n\n".join(f"§{c['clause']}\n{c['text']}" for c in clauses)
-
-
-def generate_answer(question, dates, clauses, force_citation_retry=False):
-    context = build_context(clauses)
-    citation_rule = (
-        "You MUST end your answer with one line, exactly in this format, "
-        "listing every clause you relied on:\nCitation: §X.X.X, §Y.Y.Y"
-    )
-    if force_citation_retry:
-        citation_rule = "IMPORTANT - YOU FORGOT LAST TIME: " + citation_rule
-
-    system_prompt = (
-        "You are a policy assistant. Answer using ONLY the policy clauses "
-        "below. Some are marked amended - if amended, use the amended "
-        "figure. Do not use outside knowledge.\n\n"
-        f"{citation_rule}\n\n"
-        f"Change of circumstance date: {dates['change_of_circumstance']}\n"
-        f"Determination date: {dates['determination']}\n\n"
-        f"POLICY EVIDENCE:\n\n{context}"
-    )
-    response = client.chat.completions.create(
-        model="openai/gpt-oss-120b",
-        max_tokens=600,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": question}
-        ]
-    )
-    return response.choices[0].message.content
-
-
-def generate_contradiction_answer(question, dates, group, resolved_group_clauses):
-    context = build_context(resolved_group_clauses)
-    system_prompt = (
-        "You are a policy assistant. The policy manual contains a genuine, "
-        "unresolved internal contradiction between the clauses below "
-        f"regarding {group['topic']}, for the dates given. Do NOT silently "
-        "pick one clause as correct. Explicitly state that the manual gives "
-        "two different answers, quote both figures, cite both clause "
-        "numbers, and advise the user to contact a district office for a "
-        "determination.\n\n"
-        f"Change of circumstance date: {dates['change_of_circumstance']}\n"
-        f"Determination date: {dates['determination']}\n\n"
-        f"POLICY EVIDENCE:\n\n{context}"
-    )
-    response = client.chat.completions.create(
-        model="openai/gpt-oss-120b",
-        max_tokens=600,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": question}
-        ]
-    )
-    return response.choices[0].message.content
+from pipeline import answer_question
 
 
 def parse_date_input(raw):
@@ -86,59 +19,34 @@ if __name__ == "__main__":
         "determination": parse_date_input(input("Date the determination is being made (YYYY-MM-DD): ")),
     }
 
-    top_clauses = retriever.search(question, top_k=3)
-    print(f"\nTop retrieval score: {top_clauses[0]['score']:.3f}")
+    result = answer_question(question, dates, all_clauses, retriever)
 
-    if not is_answerable(top_clauses):
+    print(f"\nTop retrieval score: {result['top_score']:.3f}")
+
+    if result["mode"] == "refusal":
         print("\nAnswer:\n")
-        print(REFUSAL_MESSAGE)
+        print(result["answer"])
+
+    elif result["mode"] == "contradiction":
+        print("\n[Contradiction detected for this date - surfacing both clauses instead of picking one]")
+        print("\nAnswer:\n")
+        print(result["answer"])
+        print("\nClauses in conflict:")
+        for c in result["clauses"]:
+            print(f"  §{c}")
+
     else:
-        retrieved_ids = [c["clause"] for c in top_clauses]
-        group = find_contradiction_group(retrieved_ids)
-
-        if group:
-            is_live, resolved_group_clauses = resolve_contradiction_group(group, all_clauses, dates)
-        else:
-            is_live = False
-
-        if group and is_live:
-            print("\n[Contradiction detected for this date - surfacing both clauses instead of picking one]")
-            answer = generate_contradiction_answer(question, dates, group, resolved_group_clauses)
-            print("\nAnswer:\n")
-            print(answer)
-            print("\nClauses in conflict:")
-            for c in resolved_group_clauses:
-                print(f"  §{c['clause']}")
-        else:
-            resolved_clauses = [apply_amendments(c, dates) for c in top_clauses]
-            resolved_clauses += get_applicable_insertions(dates)
-
-            answer = generate_answer(question, dates, resolved_clauses)
-            cited = extract_citations(answer)
-            if not cited:
-                answer = generate_answer(question, dates, resolved_clauses, force_citation_retry=True)
-                cited = extract_citations(answer)
-
-            print("\nAnswer:\n")
-            print(answer)
-
-            print("\nRetrieved clauses used as evidence:")
-            for c in resolved_clauses:
-                tag = " (AMENDED)" if c.get("amended") else ""
-                score_str = f"score: {c['score']:.3f}" if c.get("score") is not None else "inserted by amendment"
-                print(f"  §{c['clause']}{tag} ({score_str})")
-
-            known_ids = {c["clause"] for c in all_clauses} | all_known_clause_ids(dates)
-            report = validate_citations(cited, resolved_clauses, [{"clause": cid} for cid in known_ids])
-
-            print("\nCitation validation:")
-            if not report:
-                print("  WARNING - model did not produce a machine-readable citation after retry.")
-            for r in report:
-                if r["was_retrieved"]:
-                    status = "OK - matches retrieved evidence"
-                elif r["exists_in_manual"]:
-                    status = "WARNING - real clause, not part of retrieved evidence"
-                else:
-                    status = "ERROR - clause does not exist / not in force for this date"
-                print(f"  §{r['clause']}: {status}")
+        print("\nAnswer:\n")
+        print(result["answer"])
+        print("\nRetrieved/used clauses:", ", ".join(f"§{c}" for c in result["clauses"]))
+        print("\nCitation validation:")
+        if not result["citation_report"]:
+            print("  WARNING - model did not produce a machine-readable citation after retry.")
+        for r in result["citation_report"]:
+            if r["was_retrieved"]:
+                status = "OK - matches retrieved evidence"
+            elif r["exists_in_manual"]:
+                status = "WARNING - real clause, not part of retrieved evidence"
+            else:
+                status = "ERROR - clause does not exist / not in force for this date"
+            print(f"  §{r['clause']}: {status}")
