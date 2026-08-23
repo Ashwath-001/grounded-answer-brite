@@ -8,7 +8,7 @@
 
 - Citations are checked to make sure the cited clause exists and was included in the retrieved evidence.
 
-- Retrieval, generation, and citation checking are separate modules. This keeps the code simple and makes future changes easier.
+- Retrieval, generation, and citation checking are each a seperated modules. This keeps the code simple and makes future changes easier.
 
 - We do not hard-code the known trap questions. The system should handle them using general grounding and refusal logic.
 
@@ -20,10 +20,10 @@
 
 # Evaluation results (10 questions)
 
-- Ran a 10-question evaluation set covering a normal answer, the live contradiction, the same question after the contradiction is resolved, a known refusal case, an out-of-scope refusal, and both amended and pre-amendment figures. 8/10 passed on the first run.
+- I made 10 test questions to check the system. They cover a normal answer, the contradiction that is still active, the same question after the contradiction is fixed by the amendment, a case that should be refused, a completely unrelated question that should be refused, and both the old and new amended numbers. **8 out of 10 passed the first time.**
 
-- The 2 failures were both about the earnings disregard amount. Retrieval kept pulling §6.1.1 and §6.4 (which just describe that a disregard exists) instead of §6.4.1 (which has the actual dollar amount). Because of this, the LLM correctly said it did not have the exact figure, instead of making one up. This is a real retrieval limitation, not a prompt or logic bug, and we are noting it honestly instead of hiding it.
+- Both failures were the same question: (the earnings disregard amount). The model kept picking §6.1.1 & §6.4, which just say a disregard exists, instead of §6.4.1, which has the actual dollar number. So the LLM identified it didn't have the exact figure, instead of guessing one.
 
-- We see this as a good sign in one way: when the right clause is missing, the system says so instead of guessing a number. That is the grounding behavior we wanted, just triggered by a retrieval gap instead of the refusal check.
+- Its still a good sign, because when the right clause was missing, the system said it didn't know instead of making up a number. This is exactly the safe behavior we wanted.
 
-- Known limitation: retrieval sometimes picks general/definition clauses over the specific clause with the actual number, especially when the question is short. A future improvement would be increasing top_k or improving how clauses are chunked.
+- Limitation: sometimes retrieval picks a general clause over the specific clause that actually has the number, especially for short questions. This can be improved by having more clauses per question or splitting the manual into smaller parts.
