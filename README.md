@@ -13,31 +13,20 @@ A CLI tool that answers plain-language questions about the Calder County Househo
 - Refuses to answer when retrieval confidence is too low to support a grounded answer (e.g. the manual's full-time-education gap), and points the user to a district office instead of inventing a rule.
 - Validates every citation the model produces which doesnt exist in the actual manual, flagging hallucinated or unsupported clause references.
 
-## Project structure
-grounded-answer-brite/
-│
-├── data/
-│   ├── policy-manual.md
-│   └── Amendment No. 2026-01.md
-│
-├── src/
-│   ├── parser.py
-│   ├── retriever.py
-│   ├── amendments.py
-│   ├── contradictions.py
-│   ├── citations.py
-│   ├── grounding.py
-│   ├── generation.py
-│   ├── pipeline.py
-│   └── main.py
-│
-├── tests/
-│   └── evaluation.py
-│
-├── requirements.txt
-├── DECISIONS.md
-├── AI-USAGE.md
-└── README.md
+## Workflow
+
+\`\`\`mermaid
+flowchart TD
+    A[User question + 2 dates] --> B[Semantic retrieval<br/>top-3 clauses]
+    B --> C{Retrieval score<br/>above threshold?}
+    C -->|No| D[Refuse<br/>+ point to district office]
+    C -->|Yes| E{Clauses hit a known<br/>contradiction group?}
+    E -->|Yes, still live<br/>for this date| F[Surface both clauses<br/>+ explain conflict]
+    E -->|No, or resolved<br/>by amendment| G[Apply amendment<br/>per clause date-basis]
+    G --> H[LLM generates answer<br/>from clauses only]
+    H --> I[Extract + validate<br/>citations]
+    I --> J[Final answer<br/>+ citations shown]
+\`\`\`
 
 ## Setup
 

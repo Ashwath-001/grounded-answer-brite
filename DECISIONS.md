@@ -1,4 +1,10 @@
+# Day 1
+
+## Why this stack
+- I picked Python because it has easy libraries for both text search (sentence-transformers) and calling an LLM API, its also because I am comfortable reading and debugging it.
+
 # Engineering Decisions
+- We chose to parse the manual with plain regex instead of a PDF/NLP library, because the manual is already clean markdown with numbered clauses like §4.3.2. Regex is simple, easy to explain, and easy to test.
 
 - Each numbered clause (e.g. §4.3.2) is treated as one retrieval unit. This makes citations simple and precise.
 
