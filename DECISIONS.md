@@ -11,3 +11,9 @@
 - Retrieval, generation, and citation checking are separate modules. This keeps the code simple and makes future changes easier.
 
 - We do not hard-code the known trap questions. The system should handle them using general grounding and refusal logic.
+
+# Day 2 Requirement changes
+
+- Amendment values are parsed from the given amendments file itself during runtime rather than hardcoding it.
+
+- I chose this approach because in real world scenarios, the requirement might change many times not just this one time. So I thought this will be a better approach.
