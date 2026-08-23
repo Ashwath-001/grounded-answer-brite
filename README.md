@@ -1,4 +1,4 @@
-# Grounded Answer — Policy Assistant
+# Grounded Answer - Policy Assistant
 
 A CLI tool that answers plain-language questions about the Calder County Household Support Program policy manual. It answers only from the manual, cites the exact clauses and refuses when the manual doesn't clearly cover something. It also explicitly flags cases where the manual contradicts itself, instead of silently picking one side.
 
