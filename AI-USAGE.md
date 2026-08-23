@@ -8,4 +8,4 @@ LLM model such as ChatGPT and Claude was used during the development for
 
 - Used a free LLM API (Groq) instead of using paid LLMs like Anthropic, since budget was a constraint for this hackathon.
 
-*The policy manual remains the only source of truth; the AI's role was implementation help, not policy judgment.*
+*The policy manual remains the only source of truth; the AI's role was implementation help, not policy judgment. *
