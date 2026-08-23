@@ -14,27 +14,30 @@ A CLI tool that answers plain-language questions about the Calder County Househo
 - Validates every citation the model produces which doesnt exist in the actual manual, flagging hallucinated or unsupported clause references.
 
 ## Project structure
-.
+grounded-answer-brite/
+│
 ├── data/
-│ ├── policy-manual.md 
-│ └── Amendment No. 2026-01.md 
+│   ├── policy-manual.md
+│   └── Amendment No. 2026-01.md
+│
 ├── src/
-│ ├── parser.py 
-│ ├── retriever.py
-│ ├── amendments.py 
-│ ├── contradictions.py 
-│ ├── citations.py 
-│ ├── grounding.py 
-│ ├── generation.py 
-│ ├── pipeline.py 
-│ └── main.py 
+│   ├── parser.py
+│   ├── retriever.py
+│   ├── amendments.py
+│   ├── contradictions.py
+│   ├── citations.py
+│   ├── grounding.py
+│   ├── generation.py
+│   ├── pipeline.py
+│   └── main.py
+│
 ├── tests/
-│ └── evaluation.py 
+│   └── evaluation.py
+│
 ├── requirements.txt
 ├── DECISIONS.md
 ├── AI-USAGE.md
 └── README.md
-
 
 ## Setup
 
